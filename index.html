@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THEGIATOT.VN</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(to right, #b3e5fc, #e1f5fe);
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+    .container {
+        background: rgba(255,255,255,0.95);
+        padding: 25px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+        width: 420px;
+        text-align: center;
+    }
+    .title {
+        color: #007acc;
+        margin-bottom: 18px;
+        font-size: 1.8rem;
+        font-weight: bold;
+    }
+    h2 {
+        margin-bottom: 18px;
+        color: #007acc;
+        font-size: 1.3rem;
+    }
+    input, select, button {
+        width: 90%;
+        padding: 10px;
+        margin: 7px 0;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        font-size: 1rem;
+    }
+    button {
+        background: linear-gradient(to right, #42a5f5, #1e88e5);
+        color: white;
+        border: none;
+        cursor: pointer;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    button:hover {
+        background: linear-gradient(to right, #1e88e5, #1565c0);
+    }
+    .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: #5cbdf5;
+        padding: 10px 15px;
+        border-radius: 10px;
+        margin-bottom: 15px;
+        color: white;
+    }
+    .header-left {
+        font-weight: bold;
+        font-size: 1rem;
+    }
+    .header-right {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sodu {
+        background: rgba(255,255,255,0.25);
+        padding: 3px 8px;
+        border-radius: 6px;
+        font-weight: bold;
+    }
+    #countdown {
+        color: red;
+        margin-top: 10px;
+    }
+</style>
+</head>
+<body>
+
+<div id="app" class="container"></div>
+
+<script>
+function showRegister() {
+    document.getElementById("app").innerHTML = `
+        <div class="title">THEGIATOT.VN</div>
+        <h2>Đăng ký</h2>
+        <input type="text" id="username" placeholder="Tài khoản">
+        <input type="email" id="email" placeholder="Gmail">
+        <input type="password" id="password" placeholder="Mật khẩu">
+        <button onclick="register()">Đăng ký</button>
+        <p>Đã có tài khoản? <a href="#" onclick="showLogin()">Đăng nhập</a></p>
+    `;
+}
+
+function register() {
+    let user = document.getElementById("username").value;
+    let email = document.getElementById("email").value;
+    let pass = document.getElementById("password").value;
+
+    if (!user || !email || !pass) {
+        alert("⚠️ Vui lòng điền đầy đủ thông tin");
+        return;
+    }
+
+    localStorage.setItem("user", JSON.stringify({user, email, pass, balance: 0}));
+    alert("✅ Đăng ký thành công!");
+    showLogin();
+}
+
+function showLogin() {
+    document.getElementById("app").innerHTML = `
+        <div class="title">THEGIATOT.VN</div>
+        <h2>Đăng nhập</h2>
+        <input type="text" id="username" placeholder="Tài khoản">
+        <input type="password" id="password" placeholder="Mật khẩu">
+        <button onclick="login()">Đăng nhập</button>
+        <p>Chưa có tài khoản? <a href="#" onclick="showRegister()">Đăng ký</a></p>
+    `;
+}
+
+function login() {
+    let user = document.getElementById("username").value;
+    let pass = document.getElementById("password").value;
+    let saved = JSON.parse(localStorage.getItem("user"));
+
+    if (saved && saved.user === user && saved.pass === pass) {
+        showTopUp(saved.user, saved.balance);
+    } else {
+        alert("❌ Sai tài khoản hoặc mật khẩu");
+    }
+}
+
+function showTopUp(username, balance) {
+    document.getElementById("app").innerHTML = `
+        <div class="header">
+            <div class="header-left">THEGIATOT.VN</div>
+            <div class="header-right">
+                👤 ${username}
+                <div class="sodu">💰 <span id="sodu">${balance}</span>đ</div>
+            </div>
+        </div>
+        <h2>Nạp Thẻ Cào</h2>
+        <select id="nhamang">
+            <option value="Viettel">Viettel</option>
+            <option value="Mobifone">Mobifone</option>
+            <option value="Vinaphone">Vinaphone</option>
+        </select>
+        <select id="menhgia">
+            <option value="10000">10.000đ</option>
+            <option value="20000">20.000đ</option>
+            <option value="50000">50.000đ</option>
+            <option value="100000">100.000đ</option>
+            <option value="200000">200.000đ</option>
+            <option value="500000">500.000đ</option>
+        </select>
+        <input type="text" id="seri" placeholder="Số seri">
+        <input type="text" id="ma" placeholder="Mã thẻ">
+        <button onclick="napThe()">Gửi Thẻ</button>
+        <div id="ketqua"></div>
+        <div id="countdown"></div>
+    `;
+}
+
+function napThe() {
+    const menhGia = parseInt(document.getElementById('menhgia').value);
+    const seri = document.getElementById('seri').value.trim();
+    const ma = document.getElementById('ma').value.trim();
+    const ketqua = document.getElementById('ketqua');
+    const countdown = document.getElementById('countdown');
+    let userData = JSON.parse(localStorage.getItem("user"));
+
+    if (!seri || !ma) {
+        ketqua.style.color = "red";
+        ketqua.innerText = "⚠️ Vui lòng nhập đầy đủ thông tin!";
+        return;
+    }
+
+    ketqua.style.color = "green";
+    ketqua.innerText = "⏳ Đang xử lý...";
+    
+    setTimeout(() => {
+        userData.balance += menhGia;
+        localStorage.setItem("user", JSON.stringify(userData));
+        document.getElementById('sodu').innerText = userData.balance.toLocaleString();
+        ketqua.innerText = `✅ Nạp thành công ${menhGia.toLocaleString()}đ! Chuyển trang sau 10s...`;
+        
+        let timeLeft = 10;
+        countdown.innerText = `⏳ ${timeLeft}s`;
+        let timer = setInterval(() => {
+            timeLeft--;
+            countdown.innerText = `⏳ ${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                window.location.href = "https://thegiatot.vn";
+            }
+        }, 1000);
+    }, 3000);
+}
+
+// Mặc định vào Login
+showLogin();
+</script>
+</body>
+</html>
